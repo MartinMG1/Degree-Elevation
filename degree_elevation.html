@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+	.button {
+    background-color: #008080;
+    border: 3px solid #b3ffff;
+    display: inline-block;
+    color: #b3ffff;
+    padding: 10px 32px;
+    margin: 4px 5px;
+    text-align: center;
+    font-size: 22px;
+    font-style: italic;
+    cursor: pointer;
+	}
+
+	.button2 {
+	border-radius: 12px;
+	}
+
+	.button1 {
+	border-radius: 12px;
+	}
+
+	.button1:hover {
+    background-color: #b3ffff;
+    color: #008080;
+    border: 3px solid #008080;
+	}
+
+	.button2:hover {
+    background-color: #b3ffff;
+    color: #008080;
+    border: 3px solid #008080;
+	}
+
+	</style>
+
+	<title> Degree Elevation </title>
+	<script type="text/javascript">
+
+		var currentControlPoints = [];
+		var prevContrPts = [];
+
+		window.onload = function()
+		{
+			var canvas = document.getElementById("canvas");
+			canvas.addEventListener("mousedown", createBezier, false);
+		}
+
+			function createBezier()
+			{
+					clearCanvas();
+					drawPreviousControlPoints(prevContrPts);
+					drawCircle(event);
+					drawPolygon(prevContrPts);
+					deCasteljauAlg();
+			}
+
+			function drawCircle(event)
+			{
+				var canvas = document.getElementById("canvas");
+				var ctx = canvas.getContext("2d");
+
+				x = event.pageX - 8;
+				y = event.pageY - 68;
+
+				var mPoint = new point(x, y);
+
+				ctx.fillStyle = "white";
+				ctx.beginPath();
+				ctx.arc(mPoint.x, mPoint.y, 5, 0, 2 * Math.PI);
+				ctx.stroke();
+				ctx.fill();
+
+				currentControlPoints.push(mPoint);
+			}
+
+			function drawPolygon(points)
+			{
+				var canvas = document.getElementById("canvas");
+				var ctx = canvas.getContext("2d");
+				ctx.beginPath();
+				ctx.strokeStyle = "white";
+				ctx.lineWidth = 0.5;
+				
+				for (var i = 0; i < currentControlPoints.length - 1; ++i)
+				{
+					ctx.moveTo(currentControlPoints[i].x, currentControlPoints[i].y);
+					ctx.lineTo(currentControlPoints[i + 1].x, currentControlPoints[i + 1].y);
+					ctx.stroke();
+				}
+			}
+
+			function deCasteljauAlg()
+			{
+				for(var t = 0; t <= 1; t += 0.0005)
+				{
+					drawCoordinatesCurve(deCasteljauAlgorithm(currentControlPoints, t));
+				}
+			}	
+
+		
+			function deCasteljauAlgorithm (points, t) {
+	        if (t == 1) {
+	            return points[points.length - 1];
+	        }
+
+	        if (t == 0 || points.length == 1) {
+	            return points[0];
+	        }
+
+	        var calculatedPoints = [];
+
+	        var len = points.length;
+	        for (var i = 1; i < len; i++) {
+	            		var newX = t * points[i - 1].x + (1 - t) * points[i].x;
+						var newY = t * points[i - 1].y + (1 - t) * points[i].y;
+						var newPoint = new point(newX, newY);
+						calculatedPoints.push(newPoint);
+	        }
+
+	        return deCasteljauAlgorithm(calculatedPoints, t);
+	    	}
+
+			function drawCoordinatesCurve(point)
+	    	{
+		    var ctx = document.getElementById("canvas").getContext("2d");
+
+		    ctx.beginPath();
+		    ctx.arc(point.x, point.y, 1.5, 0, Math.PI * 2);
+		    ctx.fillStyle = "#e60000";
+		    ctx.fill();
+			
+			}
+
+			function clearCanvas()
+			{
+				prevContrPts = currentControlPoints.slice();
+				var ctx = document.getElementById("canvas").getContext("2d");
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+			}
+
+			function drawPreviousControlPoints(points)
+			{
+				for(var i = 0; i < points.length; ++i)
+				{
+					var ctx = document.getElementById("canvas").getContext("2d");
+				    ctx.beginPath();
+				    ctx.arc(points[i].x, points[i].y, 5, 0, Math.PI * 2);
+				    ctx.fillStyle = "white";
+				    ctx.fill();
+				}
+			}
+
+			function clearAll()
+			{
+				var ctx = document.getElementById("canvas").getContext("2d");
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				currentControlPoints = [];
+				i = 0;
+				prevContrPts = [];
+			}
+
+			function degreeElevation()
+			{
+				var newControlPoints = [];
+				var n = currentControlPoints.length;
+				for(var i = 0; i <= n; ++i)
+				{
+					if(i == 0)
+					{
+						newControlPoints.push(currentControlPoints[i]);
+					}
+					else if(i == n)
+					{
+						newControlPoints.push(currentControlPoints[i - 1]);
+					}
+					else
+					{
+						var newX = (i / n) * currentControlPoints[i - 1].x + (1 - (i / n)) * currentControlPoints[i].x;
+						var newY = (i / n) * currentControlPoints[i - 1].y + (1 - (i / n)) * currentControlPoints[i].y;
+						var newPoint = new point(newX, newY);
+						newControlPoints.push(newPoint);
+					}
+				}
+				currentControlPoints = [];
+				currentControlPoints = newControlPoints.slice();
+				newControlPoints = [];
+				var n_currentControlPoints = currentControlPoints.slice();
+				var n_prevContrPts = prevContrPts.slice();
+				clearAll();
+				currentControlPoints = n_currentControlPoints.slice();
+				prevContrPts = n_prevContrPts.slice();
+				deCasteljauAlg();
+				drawPolygon(currentControlPoints);
+				drawPreviousControlPoints(currentControlPoints);
+			}
+
+			function point(x, y)
+			{
+				this.x = x;
+				this.y = y;
+			}
+	</script>
+</head>
+<body bgcolor="#29a329">
+	<button class = "button button1" onclick = "clearAll()">Clear</button>
+	<button class = "button button2" onclick = "degreeElevation()">Degree Elevation</button>
+	<br/>
+	<canvas id = "canvas" color ="white" width = "1500" height="650" style="border:2px solid #b3ffff;"></canvas>
+</body>
+</html>
